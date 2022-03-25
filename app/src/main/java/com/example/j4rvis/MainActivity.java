@@ -3,7 +3,6 @@ package com.example.j4rvis;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
-
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
@@ -21,8 +20,13 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
-
+import com.loopj.android.http.RequestParams;
+import org.json.JSONException;
+import org.json.JSONObject;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
+import cz.msebera.android.httpclient.entity.StringEntity;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -111,33 +115,42 @@ public class MainActivity extends AppCompatActivity {
                 if(string.contains("couleur")) {
                     if(string.contains("rouge")) {
                         textView.setTextColor(Color.RED);
-                        return;
                     } else if(string.contains("noire")) {
                         textView.setTextColor(Color.BLACK);
-                        return;
                     } else if(string.contains("bleu") || string.contains("bleue")) {
                         textView.setTextColor(Color.BLUE);
-                        return;
                     } else if(string.contains("verte")) {
                         textView.setTextColor(Color.GREEN);
-                        return;
                     }
                 } else if(string.contains("fond")) {
                     if(string.contains("rouge")) {
                         constraintLayout.setBackgroundColor(Color.RED);
-                        return;
                     } else if(string.contains("noir")) {
                         constraintLayout.setBackgroundColor(Color.BLACK);
-                        return;
                     } else if(string.contains("bleu")) {
                         constraintLayout.setBackgroundColor(Color.BLUE);
-                        return;
                     } else if(string.contains("vert")) {
                         constraintLayout.setBackgroundColor(Color.GREEN);
-                        return;
+                    }
+                } else if(string.startsWith("démarre l'activité")) {
+                    String title = string.replace("démarre l'activité ", "");
+                    try {
+                        JSONObject jsonParams = new JSONObject();
+                        jsonParams.put("title", upperCaseFirstLetter(title));
+                        HttpUtils.post("activity/start", new StringEntity(jsonParams.toString()));
+                    } catch (UnsupportedEncodingException | JSONException e) {
+                        e.printStackTrace();
+                    }
+                } else if(string.startsWith("arrête l'activité")) {
+                    String title = string.replace("arrête l'activité ", "");
+                    RequestParams params = new RequestParams();
+                    try {
+                        params.put("title", URLEncoder.encode(upperCaseFirstLetter(title), "UTF-8"));
+                        HttpUtils.put("activity/stop", params);
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
                     }
                 }
-
                 textView.setText(string);
             }
 
@@ -175,8 +188,6 @@ public class MainActivity extends AppCompatActivity {
                 handlerAnimation.postDelayed(this, 1500L);
             }
         };
-
-        StartButton(null);
     }
 
     public void StartButton(View view) {
@@ -211,5 +222,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void stopPulse() {
         handlerAnimation.removeCallbacks(runnable);
+    }
+
+    private String upperCaseFirstLetter(String str) {
+        return str.substring(0, 1).toUpperCase() + str.substring(1);
     }
 }
