@@ -4,7 +4,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
 import android.Manifest;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -43,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean statusAnimation = false;
 
     private Vibrator vibrator;
+    private AlertDialog alertDialog;
 
     @Override
     protected void onStart() {
@@ -64,6 +67,26 @@ public class MainActivity extends AppCompatActivity {
         startButton = findViewById(R.id.start_button);
 
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+
+        alertDialog = new AlertDialog.Builder(MainActivity.this)
+                .setTitle("Information")
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
+                    }
+                })
+                .create();
+
+        // DEBUG
+//        try {
+//            HttpUtils.post("activity/start", "Lire", alertDialog);
+//        } catch (UnsupportedEncodingException | JSONException e) {
+//            e.printStackTrace();
+//        }
+
+//        HttpUtils.put("activity/stop", "Lire", alertDialog);
+
 
         intentRecognizer = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intentRecognizer.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
@@ -135,21 +158,13 @@ public class MainActivity extends AppCompatActivity {
                 } else if(string.startsWith("démarre l'activité")) {
                     String title = string.replace("démarre l'activité ", "");
                     try {
-                        JSONObject jsonParams = new JSONObject();
-                        jsonParams.put("title", upperCaseFirstLetter(title));
-                        HttpUtils.post("activity/start", new StringEntity(jsonParams.toString()));
-                    } catch (UnsupportedEncodingException | JSONException e) {
+                        HttpUtils.post("activity/start", upperCaseFirstLetter(title), alertDialog);
+                    } catch (JSONException | UnsupportedEncodingException e) {
                         e.printStackTrace();
                     }
                 } else if(string.startsWith("arrête l'activité")) {
                     String title = string.replace("arrête l'activité ", "");
-                    RequestParams params = new RequestParams();
-                    try {
-                        params.put("title", URLEncoder.encode(upperCaseFirstLetter(title), "UTF-8"));
-                        HttpUtils.put("activity/stop", params);
-                    } catch (UnsupportedEncodingException e) {
-                        e.printStackTrace();
-                    }
+                    HttpUtils.put("activity/stop", upperCaseFirstLetter(title), alertDialog);
                 }
                 textView.setText(string);
             }
